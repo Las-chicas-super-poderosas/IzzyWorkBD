@@ -1,0 +1,19 @@
+SELECT IdProducto, NombreP, Descripcion, Precio, Categoria
+FROM Producto
+WHERE RUC_DNIVendedor = 10101010;
+
+
+SELECT Producto, Precio, Fecha, Hora
+FROM HistorialVentas
+WHERE RUC_DNIVendedor = 10101010;
+
+
+SELECT Nombre, Apellido, DireccionEnvio, CostoEnvio, NroCelular
+FROM Envio
+WHERE IdPedido = 1001;
+
+
+SELECT AVG(Puntuacion) AS PuntuacionMedia
+FROM Valoracion
+WHERE IdProducto = 1;
+
