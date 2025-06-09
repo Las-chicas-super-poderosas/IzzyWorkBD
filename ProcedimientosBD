@@ -1,1 +1,95 @@
+ CREATE PROCEDURE sp_ObtenerPedidosPorCliente
+    @DNICliente INT
+AS
+BEGIN
+    SELECT p.IdPedido, p.Fecha, p.Estado, pr.NombreP, pr.Precio
+    FROM Pedido p
+    JOIN Producto pr ON p.IdProducto = pr.IdProducto
+    WHERE p.DNICliente = @DNICliente;
+END;
+GO
+
+EXEC sp_ObtenerPedidosPorCliente @DNICliente = 12345678;
+
+
+CREATE PROCEDURE sp_ObtenerProductosPorVendedor
+    @RUC_DNIVendedor INT
+AS
+BEGIN
+    SELECT IdProducto, NombreP, Descripcion, Precio, Categoria
+    FROM Producto
+    WHERE RUC_DNIVendedor = @RUC_DNIVendedor;
+END;
+GO
+
+EXEC sp_ObtenerProductosPorVendedor @RUC_DNIVendedor = 10101010;
+
+
+CREATE PROCEDURE sp_InsertarValoracion
+    @DNICliente INT,
+    @IdProducto INT,
+    @Puntuacion INT,
+    @Comentario NVARCHAR(MAX)
+AS
+BEGIN
+    INSERT INTO Valoracion (DNICliente, IdProducto, Puntuacion, Comentario)
+    VALUES (@DNICliente, @IdProducto, @Puntuacion, @Comentario);
+END;
+GO
+
+EXEC sp_InsertarValoracion 
+    @DNICliente = 12345678, 
+    @IdProducto = 1, 
+    @Puntuacion = 5, 
+    @Comentario = N'Muy buen producto';
+
+
+
+CREATE PROCEDURE sp_HistorialVentasPorVendedor
+    @RUC_DNIVendedor INT
+AS
+BEGIN
+    SELECT Producto, Precio, Fecha, Hora
+    FROM HistorialVentas
+    WHERE RUC_DNIVendedor = @RUC_DNIVendedor;
+END;
+GO
+
+EXEC sp_HistorialVentasPorVendedor @RUC_DNIVendedor = 10101010;
+
+
+
+CREATE PROCEDURE sp_ValoracionPromedioProducto
+    @IdProducto INT
+AS
+BEGIN
+    SELECT AVG(CAST(Puntuacion AS FLOAT)) AS PuntuacionMedia
+    FROM Valoracion
+    WHERE IdProducto = @IdProducto;
+END;
+GO
+
+EXEC sp_ValoracionPromedioProducto @IdProducto = 1;
+
+
+
+
+CREATE PROCEDURE sp_ActualizarEstadoPedido
+    @IdPedido INT,
+    @NuevoEstado NVARCHAR(50)
+AS
+BEGIN
+    UPDATE Pedido
+    SET Estado = @NuevoEstado
+    WHERE IdPedido = @IdPedido;
+END;
+GO
+
+
+EXEC sp_ActualizarEstadoPedido 
+    @IdPedido = 1001, 
+    @NuevoEstado = N'Enviado';
+
+
+
 
