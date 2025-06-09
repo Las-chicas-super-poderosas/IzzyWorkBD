@@ -1,0 +1,170 @@
+
+CREATE TRIGGER trg_DefaultEstadoPedido
+ON Pedido
+AFTER INSERT
+AS
+BEGIN
+    UPDATE p
+    SET Estado = 'Pendiente'
+    FROM Pedido p
+    JOIN inserted i ON p.IdPedido = i.IdPedido
+    WHERE i.Estado IS NULL OR i.Estado = '';
+END;
+GO
+
+
+-- Inserta un pedido sin estado (Estado = NULL)
+INSERT INTO Pedido (IdPedido, DNICliente, RUC_DNIVendedor, IdProducto, Fecha, Estado, CategoriaProductos, InformacionBancaria)
+VALUES (2001, 12345678, 10101010, 1, GETDATE(), NULL, 'Electrónica', 'Cuenta123');
+
+-- Verificamos que el trigger haya puesto "Pendiente"
+SELECT IdPedido, Estado FROM Pedido WHERE IdPedido = 2001;
+
+
+
+CREATE TRIGGER trg_AgregarHistorialVentas
+ON Pedido
+AFTER INSERT
+AS
+BEGIN
+    INSERT INTO HistorialVentas (RUC_DNIVendedor, Producto, Precio, Fecha, Hora)
+    SELECT p.RUC_DNIVendedor, pr.NombreP, pr.Precio, p.Fecha, CAST(GETDATE() AS TIME)
+    FROM inserted p
+    JOIN Producto pr ON p.IdProducto = pr.IdProducto;
+END;
+GO
+
+
+INSERT INTO Pedido (IdPedido, DNICliente, RUC_DNIVendedor, IdProducto, Fecha, Estado, CategoriaProductos, InformacionBancaria)
+VALUES (2002, 87654321, 10101010, 2, GETDATE(), 'Confirmado', 'Ropa', 'Cuenta456');
+
+-- Ver historial ventas agregado por el trigger
+SELECT * FROM HistorialVentas WHERE RUC_DNIVendedor = 10101010 AND Fecha = CAST(GETDATE() AS DATE);
+
+
+
+CREATE TRIGGER trg_ValidarPuntuacionValoracion
+ON Valoracion
+INSTEAD OF INSERT, UPDATE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT * FROM inserted WHERE Puntuacion < 1 OR Puntuacion > 5
+    )
+    BEGIN
+        RAISERROR('La puntuación debe estar entre 1 y 5.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+    ELSE
+    BEGIN
+        -- Permite la inserción o actualización si pasa la validación
+        IF EXISTS (SELECT * FROM deleted)
+        BEGIN
+            UPDATE v
+            SET DNICliente = i.DNICliente,
+                IdProducto = i.IdProducto,
+                Puntuacion = i.Puntuacion,
+                Comentario = i.Comentario
+            FROM Valoracion v
+            JOIN inserted i ON v.IdValoracion = i.IdValoracion;
+        END
+        ELSE
+        BEGIN
+            INSERT INTO Valoracion (DNICliente, IdProducto, Puntuacion, Comentario)
+            SELECT DNICliente, IdProducto, Puntuacion, Comentario FROM inserted;
+        END
+    END
+END;
+GO
+
+
+-- Intentar insertar puntuación válida (debería funcionar)
+INSERT INTO Valoracion (DNICliente, IdProducto, Puntuacion, Comentario)
+VALUES (12345678, 1, 4, 'Buen producto');
+
+-- Intentar insertar puntuación inválida (ej. 6, debería fallar)
+BEGIN TRY
+    INSERT INTO Valoracion (DNICliente, IdProducto, Puntuacion, Comentario)
+    VALUES (12345678, 1, 6, 'Puntuación inválida');
+END TRY
+BEGIN CATCH
+    PRINT 'Error: ' + ERROR_MESSAGE();
+END CATCH;
+
+
+
+
+
+CREATE TABLE AuditoriaUsuario (
+    IdAuditoria INT IDENTITY PRIMARY KEY,
+    NombreUsuario NVARCHAR(100),
+    Accion NVARCHAR(10),
+    Fecha DATETIME DEFAULT GETDATE()
+);
+
+CREATE TRIGGER trg_AuditarUsuario
+ON Usuario
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    IF EXISTS (SELECT * FROM inserted)
+    BEGIN
+        INSERT INTO AuditoriaUsuario (NombreUsuario, Accion)
+        SELECT NombreUsuario, 'INSERT/UPDATE' FROM inserted;
+    END
+
+    IF EXISTS (SELECT * FROM deleted)
+    BEGIN
+        INSERT INTO AuditoriaUsuario (NombreUsuario, Accion)
+        SELECT NombreUsuario, 'DELETE' FROM deleted;
+    END
+END;
+GO
+
+
+-- Inserción
+INSERT INTO Usuario (NombreUsuario, Contrasena, Rol, Correo)
+VALUES ('maria123', 'passMaria', 'Cliente', 'maria@mail.com');
+
+-- Actualización
+UPDATE Usuario SET Correo = 'maria_actualizado@mail.com' WHERE NombreUsuario = 'maria123';
+
+-- Eliminación
+DELETE FROM Usuario WHERE NombreUsuario = 'maria123';
+
+-- Consultar auditoría
+SELECT * FROM AuditoriaUsuario WHERE NombreUsuario = 'maria123' ORDER BY Fecha DESC;
+
+
+
+
+
+CREATE TRIGGER trg_PreventDeleteVendedor
+ON Vendedor
+INSTEAD OF DELETE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT * FROM Producto p JOIN deleted d ON p.RUC_DNIVendedor = d.RUC_DNIVendedor
+    )
+    BEGIN
+        RAISERROR('No se puede eliminar un vendedor que tiene productos asociados.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+    ELSE
+    BEGIN
+        DELETE FROM Vendedor WHERE RUC_DNIVendedor IN (SELECT RUC_DNIVendedor FROM deleted);
+    END
+END;
+GO
+
+
+-- Intentar eliminar vendedor que tiene productos (debería fallar)
+BEGIN TRY
+    DELETE FROM Vendedor WHERE RUC_DNIVendedor = 10101010;
+END TRY
+BEGIN CATCH
+    PRINT 'Error: ' + ERROR_MESSAGE();
+END CATCH;
