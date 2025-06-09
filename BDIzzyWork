@@ -1,0 +1,121 @@
+USE MASTER;
+GO
+ 
+IF EXISTS (SELECT name FROM sys.databases WHERE name = 'IzzyWork')
+BEGIN
+	ALTER DATABASE IzzyWork SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+	DROP DATABASE IzzyWork;
+END
+GO
+ 
+CREATE DATABASE IzzyWork;
+GO
+USE IzzyWork;
+GO
+ 
+-- Crear tabla Usuario
+CREATE TABLE Usuario (
+	NombreUsuario NVARCHAR(100) PRIMARY KEY,
+	Contrasena NVARCHAR(255) NOT NULL,
+	Rol NVARCHAR(50) NOT NULL,
+	Correo NVARCHAR(100) NOT NULL
+);
+ 
+CREATE TABLE Cliente (
+	DNICliente INT PRIMARY KEY,
+	NombreC NVARCHAR(100) NOT NULL,
+	ApellidoC NVARCHAR(100) NOT NULL,
+	CorreoElectronico NVARCHAR(100) UNIQUE,
+	Telefono BIGINT,
+	HistorialComprasC NVARCHAR(MAX),
+	PreferenciasProductos NVARCHAR(MAX),
+        	NombreUsuario NVARCHAR(100),
+	FOREIGN KEY (NombreUsuario) REFERENCES Usuario(NombreUsuario)
+);
+ 
+CREATE TABLE Vendedor (
+	RUC_DNIVendedor INT PRIMARY KEY,
+	NombreEmpresa_Nombres NVARCHAR(200) NOT NULL,
+	DireccionComercial NVARCHAR(255),
+	CorreoElectronico NVARCHAR(100),
+	Telefono CHAR(9),
+	CategoriaProductos NVARCHAR(100),
+	InformacionBancaria NVARCHAR(70),
+        	NombreUsuario NVARCHAR(100),
+	FOREIGN KEY (NombreUsuario) REFERENCES Usuario(NombreUsuario)
+);
+ 
+CREATE TABLE Producto (
+	IdProducto INT PRIMARY KEY,
+	NombreP NVARCHAR(100) NOT NULL,
+	Descripcion NVARCHAR(MAX),
+	Precio DECIMAL(18,2) NOT NULL,
+	Imagen NVARCHAR(255),
+	Categoria NVARCHAR(100),
+        	RUC_DNIVendedor INT NOT NULL,
+	FOREIGN KEY (RUC_DNIVendedor) REFERENCES Vendedor(RUC_DNIVendedor)
+);
+ 
+CREATE TABLE Pedido (
+	IdPedido INT PRIMARY KEY,
+	DNICliente INT NOT NULL,
+	RUC_DNIVendedor INT NOT NULL,
+	IdProducto INT NOT NULL,
+	Fecha DATE,
+	Estado NVARCHAR(50),
+	CategoriaProductos NVARCHAR(100),
+	InformacionBancaria NVARCHAR(70),
+	FOREIGN KEY (DNICliente) REFERENCES Cliente(DNICliente),
+	FOREIGN KEY (RUC_DNIVendedor) REFERENCES Vendedor(RUC_DNIVendedor),
+);
+ 
+CREATE TABLE HistorialVentas (
+	IdHistorial INT PRIMARY KEY IDENTITY(1,1),
+	RUC_DNIVendedor INT NOT NULL,
+	Producto NVARCHAR(100),
+	Precio DECIMAL(18,2),
+	Fecha DATE,
+	Hora TIME,
+	FOREIGN KEY (RUC_DNIVendedor) REFERENCES Vendedor(RUC_DNIVendedor)
+);
+ 
+CREATE TABLE Envio (
+        	IdPedido INT PRIMARY KEY,
+        	Nombre VARCHAR(100),
+        	Apellido VARCHAR(100),
+	DireccionEnvio NVARCHAR(255),
+	CostoEnvio DECIMAL(18,2),
+	NroCelular CHAR(9),
+	FOREIGN KEY (IdPedido) REFERENCES Pedido(IdPedido)
+);
+ 
+CREATE TABLE MetodoPago (
+	IdMetodoPago INT PRIMARY KEY IDENTITY(1,1),
+	Nombre NVARCHAR(100),
+	Apellido NVARCHAR(100),
+	DNI_RUCVendedor INT NOT NULL,
+	NroTarjeta BIGINT,
+	CodTransaccion BIGINT
+);
+ 
+CREATE TABLE DetallePago (
+	IdPago INT PRIMARY KEY,
+	IdPedido INT NOT NULL,
+	IdMetodoPago INT NOT NULL,
+	SubTotal DECIMAL(18,2),
+	Total DECIMAL(18,2),
+	Fecha DATE,
+	FOREIGN KEY (IdPedido) REFERENCES Pedido(IdPedido),
+	FOREIGN KEY (IdMetodoPago) REFERENCES MetodoPago(IdMetodoPago),
+        	FOREIGN KEY (IdPedido) REFERENCES Envio(IdPedido),
+);
+ 
+CREATE TABLE Valoracion (
+	IdValoracion INT PRIMARY KEY IDENTITY(1,1),
+	DNICliente INT NOT NULL,
+	IdProducto INT NOT NULL,
+	Puntuacion INT,
+	Comentario NVARCHAR(MAX),
+	FOREIGN KEY (DNICliente) REFERENCES Cliente(DNICliente),
+	FOREIGN KEY (IdProducto) REFERENCES Producto(IdProducto)
+);
