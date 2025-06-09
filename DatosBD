@@ -1,0 +1,79 @@
+-- Usuarios
+INSERT INTO Usuario (NombreUsuario, Contrasena, Rol, Correo) VALUES
+('juanperez', 'pass123', 'cliente', 'juanperez@mail.com'),
+('mariaramos', 'pass234', 'cliente', 'maria@mail.com'),
+('carloslopez', 'pass345', 'vendedor', 'carlos@mail.com'),
+('anaquiroz', 'pass456', 'vendedor', 'ana@mail.com'),
+('admin1', 'adminpass', 'admin', 'admin@mail.com');
+
+-- Clientes
+INSERT INTO Cliente (DNICliente, NombreC, ApellidoC, CorreoElectronico, Telefono, HistorialComprasC, PreferenciasProductos, NombreUsuario) VALUES
+(12345678, 'Juan', 'Perez', 'juanperez@mail.com', 987654321, 'Compra1, Compra2', 'Electrónica', 'juanperez'),
+(23456789, 'Maria', 'Ramos', 'maria@mail.com', 987654322, 'Compra3', 'Ropa', 'mariaramos'),
+(34567890, 'Luis', 'Garcia', 'luis@mail.com', 987654323, NULL, 'Deportes', NULL),
+(45678901, 'Carmen', 'Diaz', 'carmen@mail.com', 987654324, NULL, NULL, NULL),
+(56789012, 'Ana', 'Torres', 'ana@mail.com', 987654325, 'Compra4', 'Libros', NULL);
+
+-- Vendedores
+INSERT INTO Vendedor (RUC_DNIVendedor, NombreEmpresa_Nombres, DireccionComercial, CorreoElectronico, Telefono, CategoriaProductos, InformacionBancaria, NombreUsuario) VALUES
+(10101010, 'Electro S.A.', 'Av. Central 123', 'ventas@electro.com', '123456789', 'Electrónica', 'Cuenta123', 'carloslopez'),
+(20202020, 'Moda Ltda.', 'Jr. Moda 456', 'contacto@moda.com', '987654321', 'Ropa', 'Cuenta456', 'anaquiroz'),
+(30303030, 'Deportes SAC', 'Calle Sport 789', 'info@deportes.com', '112233445', 'Deportes', 'Cuenta789', NULL),
+(40404040, 'Libros y Más', 'Av. Cultura 321', 'libros@cultura.com', '998877665', 'Libros', 'Cuenta321', NULL),
+(50505050, 'Hogar S.A.', 'Av. Casa 654', 'hogar@casa.com', '556677889', 'Hogar', 'Cuenta654', NULL);
+
+-- Productos
+INSERT INTO Producto (IdProducto, NombreP, Descripcion, Precio, Imagen, Categoria, RUC_DNIVendedor) VALUES
+(1, 'Laptop Gamer', 'Laptop potente para juegos', 3500.00, 'laptop.jpg', 'Electrónica', 10101010),
+(2, 'Camisa Casual', 'Camisa para uso diario', 45.50, 'camisa.jpg', 'Ropa', 20202020),
+(3, 'Balón de Fútbol', 'Balón oficial', 75.00, 'balon.jpg', 'Deportes', 30303030),
+(4, 'Libro de Historia', 'Libro sobre historia mundial', 30.00, 'libro.jpg', 'Libros', 40404040),
+(5, 'Sofá 3 plazas', 'Sofá cómodo para sala', 1200.00, 'sofa.jpg', 'Hogar', 50505050);
+
+-- Pedidos
+INSERT INTO Pedido (IdPedido, DNICliente, RUC_DNIVendedor, IdProducto, Fecha, Estado, CategoriaProductos, InformacionBancaria) VALUES
+(1001, 12345678, 10101010, 1, '2025-06-01', 'Enviado', 'Electrónica', 'Cuenta123'),
+(1002, 23456789, 20202020, 2, '2025-06-02', 'Pendiente', 'Ropa', 'Cuenta456'),
+(1003, 34567890, 30303030, 3, '2025-06-03', 'Entregado', 'Deportes', 'Cuenta789'),
+(1004, 45678901, 40404040, 4, '2025-06-04', 'Cancelado', 'Libros', 'Cuenta321'),
+(1005, 56789012, 50505050, 5, '2025-06-05', 'En proceso', 'Hogar', 'Cuenta654');
+
+-- HistorialVentas
+INSERT INTO HistorialVentas (RUC_DNIVendedor, Producto, Precio, Fecha, Hora) VALUES
+(10101010, 'Laptop Gamer', 3500.00, '2025-06-01', '10:30:00'),
+(20202020, 'Camisa Casual', 45.50, '2025-06-02', '11:00:00'),
+(30303030, 'Balón de Fútbol', 75.00, '2025-06-03', '15:00:00'),
+(40404040, 'Libro de Historia', 30.00, '2025-06-04', '16:45:00'),
+(50505050, 'Sofá 3 plazas', 1200.00, '2025-06-05', '09:15:00');
+
+-- Envio
+INSERT INTO Envio (IdPedido, Nombre, Apellido, DireccionEnvio, CostoEnvio, NroCelular) VALUES
+(1001, 'Juan', 'Perez', 'Av. Siempre Viva 123', 20.00, '987654321'),
+(1002, 'Maria', 'Ramos', 'Jr. Los Olivos 456', 15.00, '987654322'),
+(1003, 'Luis', 'Garcia', 'Calle Falsa 789', 25.00, '987654323'),
+(1004, 'Carmen', 'Diaz', 'Av. Central 101', 10.00, '987654324'),
+(1005, 'Ana', 'Torres', 'Jr. Libertad 202', 18.00, '987654325');
+
+-- MetodoPago
+INSERT INTO MetodoPago (Nombre, Apellido, DNI_RUCVendedor, NroTarjeta, CodTransaccion) VALUES
+('Juan', 'Perez', 10101010, 1234567890123456, 10001),
+('Maria', 'Ramos', 20202020, 2345678901234567, 10002),
+('Luis', 'Garcia', 30303030, 3456789012345678, 10003),
+('Carmen', 'Diaz', 40404040, 4567890123456789, 10004),
+('Ana', 'Torres', 50505050, 5678901234567890, 10005);
+
+-- DetallePago
+INSERT INTO DetallePago (IdPago, IdPedido, IdMetodoPago, SubTotal, Total, Fecha) VALUES
+(1, 1001, 1, 3500.00, 3520.00, '2025-06-01'),
+(2, 1002, 2, 45.50, 60.50, '2025-06-02'),
+(3, 1003, 3, 75.00, 100.00, '2025-06-03'),
+(4, 1004, 4, 30.00, 40.00, '2025-06-04'),
+(5, 1005, 5, 1200.00, 1218.00, '2025-06-05');
+
+-- Valoracion
+INSERT INTO Valoracion (DNICliente, IdProducto, Puntuacion, Comentario) VALUES
+(12345678, 1, 5, 'Excelente producto!'),
+(23456789, 2, 4, 'Buena calidad.'),
+(34567890, 3, 3, 'Suficiente para su uso.'),
+(45678901, 4, 5, 'Muy informativo.'),
+(56789012, 5, 2, 'Esperaba mejor calidad.');
